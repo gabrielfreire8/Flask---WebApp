@@ -2,6 +2,12 @@ from flask import render_template, request, redirect, session, flash, url_for
 from jogoteca import app, db
 from models import Jogos, Usuarios
 
+#render_template → renderiza arquivos HTML (Jinja2)
+#request → acessa dados da requisição (formulários, GET, POST)
+#redirect → redireciona o usuário para outra rota
+#session → guarda dados do usuário durante a navegação (login)
+#flash → envia mensagens temporárias para o usuário
+#url_for → gera URLs usando o nome da função da rota (boa prática)
 
 
 @app.route("/")
@@ -30,6 +36,9 @@ def criar():
     db.session.add(jogo)
     db.session.commit()
 
+    arquivo = request.files['arquivo']
+    arquivo.save(f'uploads/{arquivo.filename}')
+
     flash('Jogo cadastrado com sucesso!')
     return redirect(url_for('index'))
 
@@ -46,7 +55,27 @@ def editar(id):
 
 @app.route("/atualizar", methods=["POST"])
 def atualizar():
-    pass
+    jogo = Jogos.query.filter_by(id=request.form['id']).first()
+    jogo.nome = request.form['nome']
+    jogo.categoria = request.form['categoria']
+    jogo.console = request.form['console']
+
+    db.session.add(jogo)
+    db.session.commit()
+
+    return redirect(url_for('index'))
+
+@app.route("/deletar/<int:id>")
+def deletar(id):
+    if 'usuario_logado' not in session or session['usuario_logado'] is None:
+        return redirect(url_for('login'))
+
+    Jogos.query.filter_by(id=id).delete()
+    db.session.commit()
+    flash('Jogo deletado com sucesso!')
+
+    return redirect(url_for('index'))
+
 
 
 @app.route("/login")
