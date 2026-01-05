@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, session, flash, url_for
+from flask import render_template, request, redirect, session, flash, url_for, send_from_directory
 from jogoteca import app, db
 from models import Jogos, Usuarios
 
@@ -37,7 +37,8 @@ def criar():
     db.session.commit()
 
     arquivo = request.files['arquivo']
-    arquivo.save(f'uploads/{arquivo.filename}')
+    uploads_path = app.config['UPLOAD_PATH']
+    arquivo.save(f'{uploads_path}/capa{jogo.id}.jpg')
 
     flash('Jogo cadastrado com sucesso!')
     return redirect(url_for('index'))
@@ -112,3 +113,8 @@ def logout():
     session['usuario_logado'] = None
     flash("Usuário foi deslogado!")
     return redirect(url_for('index'))
+
+
+@app.route('/uploads/<nome_arquivo>')
+def imagem(nome_arquivo):
+    return send_from_directory('uploads',nome_arquivo)
